@@ -1,86 +1,37 @@
 from django.contrib import admin
-from django import forms
 
 from django_admin_json_editor import JSONEditorWidget
 
-from .models import JSONModel, ArrayJSONModel, Tag
+from .models import JSONModel, SchemaModel
 
 
-DATA_SCHEMA = {
-    'type': 'object',
-    'title': 'Data',
-    'properties': {
-        'text': {
-            'title': 'Some text',
-            'type': 'string',
-            'format': 'textarea',
-        },
-        'status': {
-            'title': 'Status',
-            'type': 'boolean',
-        },
-        'html': {
-            'title': 'HTML',
-            'type': 'string',
-            'format': 'html',
-            'options': {
-                'wysiwyg': 1,
-            }
-        },
-    },
-    'required': ['text']
-}
-
-
-def dynamic_schema(widget):
-    return {
-        'type': 'array',
-        'title': 'roles',
-        'items': {
-            'type': 'object',
-            'required': [
-                'name',
-                'tag',
-            ],
-            'properties': {
-                'name': {
-                    'title': 'Name',
-                    'type': 'string',
-                    'format': 'text',
-                    'minLength': 1,
-                },
-                'tag': {
-                    'title': 'Tag',
-                    'type': 'string',
-                    'enum': [i for i in Tag.objects.values_list('name', flat=True)],
-                }
-             }
-        }
-    }
-
-
-class JSONModelAdminForm(forms.ModelForm):
-    class Meta:
-        model = JSONModel
-        fields = '__all__'
-        widgets = {
-            'data': JSONEditorWidget(DATA_SCHEMA, collapsed=False, sceditor=True),
-        }
+def get_schema(id):
+    return SchemaModel.objects.get(id=id).data
 
 
 @admin.register(JSONModel)
 class JSONModelAdmin(admin.ModelAdmin):
-    form = JSONModelAdminForm
+    list_display = ('id', 'schema', 'data')
+    search_fields = ('data',)
+    list_filter = ('schema',)
 
+    def get_readonly_fields(self, request, obj=None):
+        if obj:
+            return ['schema', ]
+        else:
+            return []
 
-@admin.register(ArrayJSONModel)
-class ArrayJSONModelAdmin(admin.ModelAdmin):
     def get_form(self, request, obj=None, **kwargs):
-        widget = JSONEditorWidget(dynamic_schema, False)
-        form = super(ArrayJSONModelAdmin, self).get_form(request, obj, widgets={'roles': widget}, **kwargs)
+        if obj:
+            schema_id = obj.schema.id
+            schema = get_schema(schema_id)
+        else:
+            schema = {}
+        widget = JSONEditorWidget(schema, False, True)
+        form = super(JSONModelAdmin, self).get_form(request, obj, widgets={'data': widget}, **kwargs)
         return form
 
 
-@admin.register(Tag)
-class TagAdmin(admin.ModelAdmin):
-    pass
+@admin.register(SchemaModel)
+class SchemaModelAdmin(admin.ModelAdmin):
+    search_fields = ('data',)

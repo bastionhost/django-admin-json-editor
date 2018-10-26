@@ -2,17 +2,18 @@ from django.db import models
 from jsonfield import JSONField
 
 
+class SchemaModel(models.Model):
+    data = JSONField()
+
+    def __unicode__(self):
+        base_name = '[{}]-[{}]-'.format(self.data['title'], self.data['type'])
+        if self.data['type'] == 'object':
+            base_name += '-'.join(self.data['properties'].keys())
+        elif self.data['type'] == 'array':
+            base_name += '-'.join(self.data['items']['properties'].keys())
+        return base_name
+
+
 class JSONModel(models.Model):
-    data = JSONField(default={
-        'text': 'some text',
-        'status': False,
-        'html': '<h1>Default</h1>',
-    })
-
-
-class ArrayJSONModel(models.Model):
-    roles = JSONField(default=[])
-
-
-class Tag(models.Model):
-    name = models.CharField('name', max_length=10)
+    schema = models.ForeignKey(SchemaModel, default=1)
+    data = JSONField(null=True, blank=True)
