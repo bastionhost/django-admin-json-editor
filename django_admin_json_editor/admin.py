@@ -49,14 +49,14 @@ class JSONEditorWidget(forms.Widget):
     def media(self):
         css = {
             'all': [
-                'django_admin_json_editor/bootstrap/css/bootstrap.min.css',
+                'django_admin_json_editor/bootstrap/css/bootstrap.4.0.0.min.css',
                 'django_admin_json_editor/fontawesome/css/font-awesome.min.css',
                 'django_admin_json_editor/style.css',
             ]
         }
         js = [
             'django_admin_json_editor/jquery/jquery.min.js',
-            'django_admin_json_editor/bootstrap/js/bootstrap.min.js',
+            'django_admin_json_editor/bootstrap/js/bootstrap.4.0.0.min.js',
             'django_admin_json_editor/jsoneditor/jsoneditor.min.js',
         ]
         if self._sceditor:
